@@ -1,0 +1,19 @@
+{
+  "name": "promise",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "tsc && pnpm promises-aplus-tests dist/index.js",
+    "test2": "tsc && node dist/index.js",
+    "dev": "tsc && node dist/run.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^18.15.11",
+    "promises-aplus-tests": "^2.1.2",
+    "typescript": "^5.0.3"
+  }
+}
