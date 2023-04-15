@@ -1,6 +1,4 @@
 
-// import promise_test from 'promise-aplus-tests'
-// const promise_test = require('promises-aplus-tests')
 import MyPromise,{DeferredResult} from "./MyPromise"
 
 interface Adapters{
@@ -15,5 +13,4 @@ const adapter:Adapters = {
     deferred:MyPromise.deferred
 }
 
-// promise_test(adapter)
 module.exports = adapter

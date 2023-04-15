@@ -1,2 +1,0 @@
-#!sh
-pnpm run test

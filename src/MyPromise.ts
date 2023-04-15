@@ -6,22 +6,16 @@ export interface DeferredResult<Value> {
 
 export namespace PromiseUtils {
     export enum PromiseState {
-        pending = "pending",
-        fulfilled = "fulfilled",
-        rejected = "rejected",
+        PENDING = "pending",
+        FULFILLED = "fulfilled",
+        REJECTED = "rejected",
     }
-    export enum ErrorState {
-        NO_ERROR = "NO_ERROR",
-        RESOLVED = "RESOLVED",
-        NO_RESOLVED = "NO_RESOLVED",
-    }
+    export type ResolveCallback<T> = (value?: T) => void;
+    export type RejectCallback = (reason?: any) => void;
     export type Callback<T> = (
         resolve: ResolveCallback<T>,
         reject: RejectCallback
     ) => void;
-    export type ResolveCallback<T> = (value?: T) => void;
-    export type RejectCallback = (reason?: any) => void;
-    export type ThenCallback<Arg, ReturnValue> = (value: Arg) => ReturnValue;
     export type ThenOnFulfilled<T> = (value?: T) => any;
     export type ThenOnRejected<T> = (value?: T) => any;
 
@@ -86,18 +80,16 @@ export namespace PromiseUtils {
 }
 
 class MyPromise<T> {
-    state: PromiseUtils.PromiseState = PromiseUtils.PromiseState.pending;
+    state: PromiseUtils.PromiseState = PromiseUtils.PromiseState.PENDING;
     value: T | undefined = undefined;
     reason: any = undefined;
     onFulfilled: Array<PromiseUtils.CallbackWithCalled> = [];
     onRejected: Array<PromiseUtils.CallbackWithCalled> = [];
     onFulfilledResult: Array<PromiseUtils.OnFulfilledResult<any>> = [];
     onRejectedResult: Array<PromiseUtils.OnRejectedResult<any>> = [];
-    prev_promise: MyPromise<any> | null = null;
 
     constructor(callback: PromiseUtils.Callback<T>) {
         const resolve = (value?: T) => {
-            // this.toResolved(value);
             MyPromise.resolve_promise(this as any, value);
         };
         const reject = (reason?: T) => {
@@ -107,7 +99,7 @@ class MyPromise<T> {
         try {
             callback(resolve, reject);
         } catch (error) {
-            if (this.state === PromiseUtils.PromiseState.pending) {
+            if (this.state === PromiseUtils.PromiseState.PENDING) {
                 this.toRejected(error as T);
                 this.flush_rejected();
             }
@@ -120,7 +112,6 @@ class MyPromise<T> {
             promise.toRejected(new TypeError("Chaining cycle detected for promise"));
         } else if (PromiseUtils.is_promise(x)) {
             x.then(
-                // (y:any)=>MyPromise.resolve_promise(promise,y),
                 promise.toResolved.bind(promise),
                 promise.toRejected.bind(promise)
             );
@@ -147,11 +138,6 @@ class MyPromise<T> {
                             reject_promise(error);
                         }
                     }
-                    // if (PromiseUtils.is_thenable(ret)) {
-                    //     if (!(resolve_promise.called)) {
-                    //         MyPromise.resolve_promise(promise, ret)
-                    //     }
-                    // }
                 } else {
                     promise.toResolved(x);
                 }
@@ -164,24 +150,24 @@ class MyPromise<T> {
     }
 
     private toResolved(value?: T) {
-        if (this.state !== PromiseUtils.PromiseState.pending) {
+        if (this.state !== PromiseUtils.PromiseState.PENDING) {
             return;
         }
         this.value = value;
-        this.change_state(PromiseUtils.PromiseState.fulfilled);
+        this.change_state(PromiseUtils.PromiseState.FULFILLED);
         this.flush_fulfilled();
     }
     private toRejected(reason?: any) {
-        if (this.state !== PromiseUtils.PromiseState.pending) {
+        if (this.state !== PromiseUtils.PromiseState.PENDING) {
             return;
         }
         this.reason = reason;
-        this.change_state(PromiseUtils.PromiseState.rejected);
+        this.change_state(PromiseUtils.PromiseState.REJECTED);
         this.flush_rejected();
     }
 
     private flush_fulfilled() {
-        if (this.state !== PromiseUtils.PromiseState.fulfilled) return;
+        if (this.state !== PromiseUtils.PromiseState.FULFILLED) return;
         PromiseUtils.spawn(() => {
             for (let i = 0; i < this.onFulfilled.length; ++i) {
                 const callback = this.onFulfilled[i];
@@ -200,7 +186,7 @@ class MyPromise<T> {
         });
     }
     private flush_rejected() {
-        if (this.state !== PromiseUtils.PromiseState.rejected) return;
+        if (this.state !== PromiseUtils.PromiseState.REJECTED) return;
         PromiseUtils.spawn(() => {
             for (let i = 0; i < this.onRejected.length; ++i) {
                 const callback = this.onRejected[i];
@@ -217,9 +203,6 @@ class MyPromise<T> {
                 }
             }
         });
-    }
-    private set_prev(promise: MyPromise<any>) {
-        this.prev_promise = promise;
     }
 
     then(
@@ -282,7 +265,7 @@ class MyPromise<T> {
     }
 
     private change_state(new_state: PromiseUtils.PromiseState) {
-        if (this.state !== PromiseUtils.PromiseState.pending)
+        if (this.state !== PromiseUtils.PromiseState.PENDING)
             throw new Error("Promise状态不是pending");
         this.state = new_state;
     }
