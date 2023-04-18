@@ -18,7 +18,6 @@ export namespace PromiseUtils {
     ) => void;
     export type ThenOnFulfilled<T> = (value?: T) => any;
     export type ThenOnRejected<T> = (value?: T) => any;
-
     export type OnFulfilledResult<T> = {
         type: "success" | "faild";
         value: T;
@@ -34,7 +33,6 @@ export namespace PromiseUtils {
             }
         }, 0);
     }
-
     export function is_promise(target: any): boolean {
         return target instanceof MyPromise;
     }
@@ -53,7 +51,6 @@ export namespace PromiseUtils {
     export function get_then(target: any): any {
         return target.then;
     }
-
     export function get_finally_then(thenable: any, res: any, rej: any) {
         let then;
         while (is_obj(thenable)) {
@@ -83,11 +80,11 @@ class MyPromise<T> {
     state: PromiseUtils.PromiseState = PromiseUtils.PromiseState.PENDING;
     value: T | undefined = undefined;
     reason: any = undefined;
-    onFulfilled: Array<PromiseUtils.CallbackWithCalled> = [];
-    onRejected: Array<PromiseUtils.CallbackWithCalled> = [];
-    onFulfilledResult: Array<PromiseUtils.OnFulfilledResult<any>> = [];
-    onRejectedResult: Array<PromiseUtils.OnRejectedResult<any>> = [];
-    visited:Set<any> = new Set()
+    private onFulfilled: Array<PromiseUtils.CallbackWithCalled> = [];
+    private onRejected: Array<PromiseUtils.CallbackWithCalled> = [];
+    private onFulfilledResult: Array<PromiseUtils.OnFulfilledResult<any>> = [];
+    private onRejectedResult: Array<PromiseUtils.OnRejectedResult<any>> = [];
+    private visited: Set<any> = new Set();
 
     constructor(callback: PromiseUtils.Callback<T>) {
         const resolve = (value?: T) => {
@@ -106,55 +103,6 @@ class MyPromise<T> {
             }
         }
     }
-    static resolve_called = false;
-    static reject_called = false;
-    static resolve_promise(promise: MyPromise<unknown>, x: any) {
-        if(promise.visited.has(x)){
-            promise.toRejected(new TypeError("A recursive loop occurs"));
-            return
-        }
-        if (promise === x) {
-            promise.toRejected(new TypeError("Chaining cycle detected for promise"));
-        } else if (PromiseUtils.is_promise(x)) {
-            x.then(
-                promise.toResolved.bind(promise),
-                promise.toRejected.bind(promise)
-            );
-        } else if (PromiseUtils.is_obj(x)) {
-            try {
-                const resolve_promise = (value: any) => {
-                    if (resolve_promise.called || reject_promise.called) return;
-                    resolve_promise.called = true;
-                    MyPromise.resolve_promise(promise, value);
-                };
-                resolve_promise.called = false;
-                const reject_promise = (reason: any) => {
-                    if (reject_promise.called || resolve_promise.called) return;
-                    reject_promise.called = true;
-                    promise.toRejected(reason);
-                };
-                reject_promise.called = false;
-                const then = PromiseUtils.get_then(x);
-                if (typeof then === "function") {
-                    promise.visited.add(x)
-                    try {
-                        then.call(x, resolve_promise, reject_promise);
-                    } catch (error) {
-                        if (!resolve_promise.called && !reject_promise.called) {
-                            reject_promise(error);
-                        }
-                    }
-                } else {
-                    promise.toResolved(x);
-                }
-            } catch (error) {
-                promise.toRejected(error);
-            }
-        } else {
-            promise.toResolved(x);
-        }
-        promise.visited.clear()
-    }
 
     private toResolved(value?: T) {
         if (this.state !== PromiseUtils.PromiseState.PENDING) {
@@ -172,7 +120,6 @@ class MyPromise<T> {
         this.change_state(PromiseUtils.PromiseState.REJECTED);
         this.flush_rejected();
     }
-
     private flush_fulfilled() {
         if (this.state !== PromiseUtils.PromiseState.FULFILLED) return;
         PromiseUtils.spawn(() => {
@@ -210,6 +157,11 @@ class MyPromise<T> {
                 }
             }
         });
+    }
+    private change_state(new_state: PromiseUtils.PromiseState) {
+        if (this.state !== PromiseUtils.PromiseState.PENDING)
+            throw new Error("Promise状态不是pending");
+        this.state = new_state;
     }
 
     then(
@@ -271,12 +223,53 @@ class MyPromise<T> {
         return promise;
     }
 
-    private change_state(new_state: PromiseUtils.PromiseState) {
-        if (this.state !== PromiseUtils.PromiseState.PENDING)
-            throw new Error("Promise状态不是pending");
-        this.state = new_state;
+    static resolve_promise(promise: MyPromise<unknown>, x: any) {
+        if (promise.visited.has(x)) {
+            promise.toRejected(new TypeError("A recursive loop occurs"));
+            return;
+        }
+        if (promise === x) {
+            promise.toRejected(new TypeError("Chaining cycle detected for promise"));
+        } else if (PromiseUtils.is_promise(x)) {
+            x.then(
+                promise.toResolved.bind(promise),
+                promise.toRejected.bind(promise)
+            );
+        } else if (PromiseUtils.is_obj(x)) {
+            try {
+                const resolve_promise = (value: any) => {
+                    if (resolve_promise.called || reject_promise.called) return;
+                    resolve_promise.called = true;
+                    MyPromise.resolve_promise(promise, value);
+                };
+                resolve_promise.called = false;
+                const reject_promise = (reason: any) => {
+                    if (reject_promise.called || resolve_promise.called) return;
+                    reject_promise.called = true;
+                    promise.toRejected(reason);
+                };
+                reject_promise.called = false;
+                const then = PromiseUtils.get_then(x);
+                if (typeof then === "function") {
+                    promise.visited.add(x);
+                    try {
+                        then.call(x, resolve_promise, reject_promise);
+                    } catch (error) {
+                        if (!resolve_promise.called && !reject_promise.called) {
+                            reject_promise(error);
+                        }
+                    }
+                } else {
+                    promise.toResolved(x);
+                }
+            } catch (error) {
+                promise.toRejected(error);
+            }
+        } else {
+            promise.toResolved(x);
+        }
+        promise.visited.clear();
     }
-
     static resolve<T>(value?: T): MyPromise<T> {
         return new MyPromise((res, rej) => res(value));
     }
