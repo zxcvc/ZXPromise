@@ -87,6 +87,7 @@ class MyPromise<T> {
     onRejected: Array<PromiseUtils.CallbackWithCalled> = [];
     onFulfilledResult: Array<PromiseUtils.OnFulfilledResult<any>> = [];
     onRejectedResult: Array<PromiseUtils.OnRejectedResult<any>> = [];
+    visited:Set<any> = new Set()
 
     constructor(callback: PromiseUtils.Callback<T>) {
         const resolve = (value?: T) => {
@@ -108,6 +109,10 @@ class MyPromise<T> {
     static resolve_called = false;
     static reject_called = false;
     static resolve_promise(promise: MyPromise<unknown>, x: any) {
+        if(promise.visited.has(x)){
+            promise.toRejected(new TypeError("A recursive loop occurs"));
+            return
+        }
         if (promise === x) {
             promise.toRejected(new TypeError("Chaining cycle detected for promise"));
         } else if (PromiseUtils.is_promise(x)) {
@@ -131,6 +136,7 @@ class MyPromise<T> {
                 reject_promise.called = false;
                 const then = PromiseUtils.get_then(x);
                 if (typeof then === "function") {
+                    promise.visited.add(x)
                     try {
                         then.call(x, resolve_promise, reject_promise);
                     } catch (error) {
@@ -147,6 +153,7 @@ class MyPromise<T> {
         } else {
             promise.toResolved(x);
         }
+        promise.visited.clear()
     }
 
     private toResolved(value?: T) {
