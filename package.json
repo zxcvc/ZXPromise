@@ -1,17 +1,24 @@
 {
-  "name": "promise",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "tsc && promises-aplus-tests dist/index.js"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "@types/node": "^18.15.11",
-    "promises-aplus-tests": "^2.1.2",
-    "typescript": "^5.0.3"
-  }
+	"name": "my-promise",
+	"version": "1.0.0",
+	"description": "",
+	"main": "dist/index.js.ts",
+	"types": "./dist/MyPromise.d.ts",
+	"scripts": {
+		"build": "rollup -c --bundleConfigAsCjs",
+		"test": "pnpm build && promises-aplus-tests adapter/index.js"
+	},
+	"keywords": [
+		"promise",
+		"Promise"
+	],
+	"author": "",
+	"license": "ISC",
+	"devDependencies": {
+		"@types/node": "^18.15.11",
+		"promises-aplus-tests": "^2.1.2",
+		"rollup": "^3.23.0",
+		"rollup-plugin-typescript2": "^0.34.1",
+		"typescript": "^5.0.3"
+	}
 }
