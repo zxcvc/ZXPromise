@@ -148,7 +148,7 @@ var MyPromise = /** @class */ (function () {
     };
     MyPromise.prototype.change_state = function (new_state) {
         if (this.state !== PromiseUtils.PromiseState.PENDING)
-            throw new Error("Promise状态不是pending");
+            throw new Error("Promise is not in pending");
         this.state = new_state;
     };
     MyPromise.prototype.then = function (onFulfilled, onRejected) {
