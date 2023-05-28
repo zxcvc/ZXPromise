@@ -12,8 +12,8 @@
 		"promise",
 		"Promise"
 	],
-	"author": "",
-	"license": "ISC",
+	"author": "zxcvzzz",
+	"license": "MIT",
 	"devDependencies": {
 		"@types/node": "^18.15.11",
 		"promises-aplus-tests": "^2.1.2",
