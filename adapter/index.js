@@ -1,7 +1,7 @@
-const { MyPromise } = require("../dist/index");
+const { ZPromise } = require("../dist/index");
 const adapter = {
-	resolved: MyPromise.resolve,
-	rejected: MyPromise.reject,
-	deferred: MyPromise.deferred,
+	resolved: ZPromise.resolve,
+	rejected: ZPromise.reject,
+	deferred: ZPromise.deferred,
 };
 module.exports = adapter;

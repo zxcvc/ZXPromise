@@ -5,7 +5,7 @@ import ts from "rollup-plugin-typescript2";
 
 export default defineConfig([
 	{
-		input: resolve(__dirname, "./src/MyPromise.ts"),
+		input: resolve(__dirname, "./src/ZPromise.ts"),
 		output: [
 			{
 				format: "esm",

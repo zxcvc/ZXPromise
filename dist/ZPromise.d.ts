@@ -1,9 +1,9 @@
 export interface DeferredResult<Value> {
-    promise: MyPromise<Value>;
+    promise: ZPromise<Value>;
     resolve<T>(value: T): void;
     reject<T>(value: T): void;
 }
-export declare namespace PromiseUtils {
+declare namespace PromiseUtils {
     enum PromiseState {
         PENDING = "pending",
         FULFILLED = "fulfilled",
@@ -31,7 +31,7 @@ export declare namespace PromiseUtils {
     };
     function make_callback(cb: Function): CallbackWithCalled;
 }
-declare class MyPromise<T> {
+declare class ZPromise<T> {
     state: PromiseUtils.PromiseState;
     value: T | undefined;
     reason: any;
@@ -46,10 +46,10 @@ declare class MyPromise<T> {
     private flush_fulfilled;
     private flush_rejected;
     private change_state;
-    then(onFulfilled?: PromiseUtils.ThenOnFulfilled<T>, onRejected?: PromiseUtils.ThenOnRejected<any>): MyPromise<unknown>;
-    static resolve_promise(promise: MyPromise<unknown>, x: any): void;
-    static resolve<T>(value?: T): MyPromise<T>;
-    static reject<T>(reason: T): MyPromise<T>;
+    then(onFulfilled?: PromiseUtils.ThenOnFulfilled<T>, onRejected?: PromiseUtils.ThenOnRejected<any>): ZPromise<unknown>;
+    static resolve_promise(promise: ZPromise<unknown>, x: any): void;
+    static resolve<T>(value?: T): ZPromise<T>;
+    static reject<T>(reason: T): ZPromise<T>;
     static deferred<T>(): DeferredResult<T>;
 }
-export { MyPromise };
+export { ZPromise };

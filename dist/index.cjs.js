@@ -1,6 +1,6 @@
 'use strict';
 
-exports.PromiseUtils = void 0;
+var PromiseUtils;
 (function (PromiseUtils) {
     (function (PromiseState) {
         PromiseState["PENDING"] = "pending";
@@ -18,7 +18,7 @@ exports.PromiseUtils = void 0;
     }
     PromiseUtils.spawn = spawn;
     function is_promise(target) {
-        return target instanceof MyPromise;
+        return target instanceof ZPromise;
     }
     PromiseUtils.is_promise = is_promise;
     function is_obj(target) {
@@ -56,11 +56,11 @@ exports.PromiseUtils = void 0;
         };
     }
     PromiseUtils.make_callback = make_callback;
-})(exports.PromiseUtils || (exports.PromiseUtils = {}));
-var MyPromise = /** @class */ (function () {
-    function MyPromise(callback) {
+})(PromiseUtils || (PromiseUtils = {}));
+var ZPromise = /** @class */ (function () {
+    function ZPromise(callback) {
         var _this = this;
-        this.state = exports.PromiseUtils.PromiseState.PENDING;
+        this.state = PromiseUtils.PromiseState.PENDING;
         this.value = undefined;
         this.reason = undefined;
         this.onFulfilled = [];
@@ -69,7 +69,7 @@ var MyPromise = /** @class */ (function () {
         this.onRejectedResult = [];
         this.visited = new Set();
         var resolve = function (value) {
-            MyPromise.resolve_promise(_this, value);
+            ZPromise.resolve_promise(_this, value);
         };
         var reject = function (reason) {
             _this.toRejected(reason);
@@ -78,33 +78,33 @@ var MyPromise = /** @class */ (function () {
             callback(resolve, reject);
         }
         catch (error) {
-            if (this.state === exports.PromiseUtils.PromiseState.PENDING) {
+            if (this.state === PromiseUtils.PromiseState.PENDING) {
                 this.toRejected(error);
                 this.flush_rejected();
             }
         }
     }
-    MyPromise.prototype.toResolved = function (value) {
-        if (this.state !== exports.PromiseUtils.PromiseState.PENDING) {
+    ZPromise.prototype.toResolved = function (value) {
+        if (this.state !== PromiseUtils.PromiseState.PENDING) {
             return;
         }
         this.value = value;
-        this.change_state(exports.PromiseUtils.PromiseState.FULFILLED);
+        this.change_state(PromiseUtils.PromiseState.FULFILLED);
         this.flush_fulfilled();
     };
-    MyPromise.prototype.toRejected = function (reason) {
-        if (this.state !== exports.PromiseUtils.PromiseState.PENDING) {
+    ZPromise.prototype.toRejected = function (reason) {
+        if (this.state !== PromiseUtils.PromiseState.PENDING) {
             return;
         }
         this.reason = reason;
-        this.change_state(exports.PromiseUtils.PromiseState.REJECTED);
+        this.change_state(PromiseUtils.PromiseState.REJECTED);
         this.flush_rejected();
     };
-    MyPromise.prototype.flush_fulfilled = function () {
+    ZPromise.prototype.flush_fulfilled = function () {
         var _this = this;
-        if (this.state !== exports.PromiseUtils.PromiseState.FULFILLED)
+        if (this.state !== PromiseUtils.PromiseState.FULFILLED)
             return;
-        exports.PromiseUtils.spawn(function () {
+        PromiseUtils.spawn(function () {
             for (var i = 0; i < _this.onFulfilled.length; ++i) {
                 var callback = _this.onFulfilled[i];
                 if (callback.called)
@@ -124,11 +124,11 @@ var MyPromise = /** @class */ (function () {
             }
         });
     };
-    MyPromise.prototype.flush_rejected = function () {
+    ZPromise.prototype.flush_rejected = function () {
         var _this = this;
-        if (this.state !== exports.PromiseUtils.PromiseState.REJECTED)
+        if (this.state !== PromiseUtils.PromiseState.REJECTED)
             return;
-        exports.PromiseUtils.spawn(function () {
+        PromiseUtils.spawn(function () {
             for (var i = 0; i < _this.onRejected.length; ++i) {
                 var callback = _this.onRejected[i];
                 if (callback.called)
@@ -148,56 +148,56 @@ var MyPromise = /** @class */ (function () {
             }
         });
     };
-    MyPromise.prototype.change_state = function (new_state) {
-        if (this.state !== exports.PromiseUtils.PromiseState.PENDING)
+    ZPromise.prototype.change_state = function (new_state) {
+        if (this.state !== PromiseUtils.PromiseState.PENDING)
             throw new Error("Promise is not in pending");
         this.state = new_state;
     };
-    MyPromise.prototype.then = function (onFulfilled, onRejected) {
+    ZPromise.prototype.then = function (onFulfilled, onRejected) {
         var _this = this;
         var res;
         var rej;
-        var promise = new MyPromise(function (_res, _rej) {
+        var promise = new ZPromise(function (_res, _rej) {
             res = _res;
             rej = _rej;
         });
         if (typeof onFulfilled !== "function") {
-            this.onFulfilled.push(exports.PromiseUtils.make_callback(function () {
+            this.onFulfilled.push(PromiseUtils.make_callback(function () {
                 res(_this.value);
             }));
         }
         if (typeof onRejected !== "function") {
-            this.onRejected.push(exports.PromiseUtils.make_callback(function () {
+            this.onRejected.push(PromiseUtils.make_callback(function () {
                 rej(_this.reason);
             }));
         }
         if (typeof onFulfilled === "function") {
-            var index_1 = this.onFulfilled.push(exports.PromiseUtils.make_callback(onFulfilled)) - 1;
-            this.onFulfilled.push(exports.PromiseUtils.make_callback(function () {
+            var index_1 = this.onFulfilled.push(PromiseUtils.make_callback(onFulfilled)) - 1;
+            this.onFulfilled.push(PromiseUtils.make_callback(function () {
                 var result = _this.onFulfilledResult[index_1];
                 if (result.type === "faild") {
                     rej(result.value);
                     throw result.value;
                 }
-                MyPromise.resolve_promise(promise, result.value);
+                ZPromise.resolve_promise(promise, result.value);
             }));
         }
         if (typeof onRejected === "function") {
-            var index_2 = this.onRejected.push(exports.PromiseUtils.make_callback(onRejected)) - 1;
-            this.onRejected.push(exports.PromiseUtils.make_callback(function () {
+            var index_2 = this.onRejected.push(PromiseUtils.make_callback(onRejected)) - 1;
+            this.onRejected.push(PromiseUtils.make_callback(function () {
                 var result = _this.onRejectedResult[index_2];
                 if (result.type === "faild") {
                     rej(result.value);
                     throw result.value;
                 }
-                MyPromise.resolve_promise(promise, result.value);
+                ZPromise.resolve_promise(promise, result.value);
             }));
         }
         this.flush_fulfilled();
         this.flush_rejected();
         return promise;
     };
-    MyPromise.resolve_promise = function (promise, x) {
+    ZPromise.resolve_promise = function (promise, x) {
         if (promise.visited.has(x)) {
             promise.toRejected(new TypeError("A recursive loop occurs"));
             return;
@@ -205,16 +205,16 @@ var MyPromise = /** @class */ (function () {
         if (promise === x) {
             promise.toRejected(new TypeError("Chaining cycle detected for promise"));
         }
-        else if (exports.PromiseUtils.is_promise(x)) {
+        else if (PromiseUtils.is_promise(x)) {
             x.then(promise.toResolved.bind(promise), promise.toRejected.bind(promise));
         }
-        else if (exports.PromiseUtils.is_obj(x)) {
+        else if (PromiseUtils.is_obj(x)) {
             try {
                 var resolve_promise_1 = function (value) {
                     if (resolve_promise_1.called || reject_promise_1.called)
                         return;
                     resolve_promise_1.called = true;
-                    MyPromise.resolve_promise(promise, value);
+                    ZPromise.resolve_promise(promise, value);
                 };
                 resolve_promise_1.called = false;
                 var reject_promise_1 = function (reason) {
@@ -224,7 +224,7 @@ var MyPromise = /** @class */ (function () {
                     promise.toRejected(reason);
                 };
                 reject_promise_1.called = false;
-                var then = exports.PromiseUtils.get_then(x);
+                var then = PromiseUtils.get_then(x);
                 if (typeof then === "function") {
                     promise.visited.add(x);
                     try {
@@ -249,16 +249,16 @@ var MyPromise = /** @class */ (function () {
         }
         promise.visited.clear();
     };
-    MyPromise.resolve = function (value) {
-        return new MyPromise(function (res, rej) { return res(value); });
+    ZPromise.resolve = function (value) {
+        return new ZPromise(function (res, rej) { return res(value); });
     };
-    MyPromise.reject = function (reason) {
-        return new MyPromise(function (res, rej) { return rej(reason); });
+    ZPromise.reject = function (reason) {
+        return new ZPromise(function (res, rej) { return rej(reason); });
     };
-    MyPromise.deferred = function () {
+    ZPromise.deferred = function () {
         var res;
         var rej;
-        var promise = new MyPromise(function (_res, _rej) {
+        var promise = new ZPromise(function (_res, _rej) {
             res = _res;
             rej = _rej;
         });
@@ -272,7 +272,7 @@ var MyPromise = /** @class */ (function () {
             },
         };
     };
-    return MyPromise;
+    return ZPromise;
 }());
 
-exports.MyPromise = MyPromise;
+exports.ZPromise = ZPromise;

@@ -1,10 +1,10 @@
 export interface DeferredResult<Value> {
-	promise: MyPromise<Value>;
+	promise: ZPromise<Value>;
 	resolve<T>(value: T): void;
 	reject<T>(value: T): void;
 }
 
-export namespace PromiseUtils {
+namespace PromiseUtils {
 	export enum PromiseState {
 		PENDING = "pending",
 		FULFILLED = "fulfilled",
@@ -31,7 +31,7 @@ export namespace PromiseUtils {
 		}, 0);
 	}
 	export function is_promise(target: any): boolean {
-		return target instanceof MyPromise;
+		return target instanceof ZPromise;
 	}
 	export function is_obj(target: any): boolean {
 		return (typeof target === "object" || typeof target === "function") && target !== null;
@@ -67,7 +67,7 @@ export namespace PromiseUtils {
 	}
 }
 
-class MyPromise<T> {
+class ZPromise<T> {
 	state: PromiseUtils.PromiseState = PromiseUtils.PromiseState.PENDING;
 	value: T | undefined = undefined;
 	reason: any = undefined;
@@ -79,7 +79,7 @@ class MyPromise<T> {
 
 	constructor(callback: PromiseUtils.Callback<T>) {
 		const resolve = (value?: T) => {
-			MyPromise.resolve_promise(this as any, value);
+			ZPromise.resolve_promise(this as any, value);
 		};
 		const reject = (reason?: T) => {
 			this.toRejected(reason);
@@ -157,10 +157,10 @@ class MyPromise<T> {
 	then(
 		onFulfilled?: PromiseUtils.ThenOnFulfilled<T>,
 		onRejected?: PromiseUtils.ThenOnRejected<any>
-	): MyPromise<unknown> {
+	): ZPromise<unknown> {
 		let res: any;
 		let rej: any;
-		const promise: MyPromise<unknown> = new MyPromise((_res, _rej) => {
+		const promise: ZPromise<unknown> = new ZPromise((_res, _rej) => {
 			res = _res;
 			rej = _rej;
 		});
@@ -189,7 +189,7 @@ class MyPromise<T> {
 						rej(result.value);
 						throw result.value;
 					}
-					MyPromise.resolve_promise(promise, result.value);
+					ZPromise.resolve_promise(promise, result.value);
 				})
 			);
 		}
@@ -202,7 +202,7 @@ class MyPromise<T> {
 						rej(result.value);
 						throw result.value;
 					}
-					MyPromise.resolve_promise(promise, result.value);
+					ZPromise.resolve_promise(promise, result.value);
 				})
 			);
 		}
@@ -211,7 +211,7 @@ class MyPromise<T> {
 		return promise;
 	}
 
-	static resolve_promise(promise: MyPromise<unknown>, x: any) {
+	static resolve_promise(promise: ZPromise<unknown>, x: any) {
 		if (promise.visited.has(x)) {
 			promise.toRejected(new TypeError("A recursive loop occurs"));
 			return;
@@ -225,7 +225,7 @@ class MyPromise<T> {
 				const resolve_promise = (value: any) => {
 					if (resolve_promise.called || reject_promise.called) return;
 					resolve_promise.called = true;
-					MyPromise.resolve_promise(promise, value);
+					ZPromise.resolve_promise(promise, value);
 				};
 				resolve_promise.called = false;
 				const reject_promise = (reason: any) => {
@@ -255,16 +255,16 @@ class MyPromise<T> {
 		}
 		promise.visited.clear();
 	}
-	static resolve<T>(value?: T): MyPromise<T> {
-		return new MyPromise((res, rej) => res(value));
+	static resolve<T>(value?: T): ZPromise<T> {
+		return new ZPromise((res, rej) => res(value));
 	}
-	static reject<T>(reason: T): MyPromise<T> {
-		return new MyPromise((res, rej) => rej(reason));
+	static reject<T>(reason: T): ZPromise<T> {
+		return new ZPromise((res, rej) => rej(reason));
 	}
 	static deferred<T>(): DeferredResult<T> {
 		let res: PromiseUtils.ResolveCallback<any>;
 		let rej: PromiseUtils.RejectCallback;
-		const promise: MyPromise<T> = new MyPromise((_res, _rej) => {
+		const promise: ZPromise<T> = new ZPromise((_res, _rej) => {
 			res = _res;
 			rej = _rej;
 		});
@@ -280,4 +280,4 @@ class MyPromise<T> {
 	}
 }
 
-export { MyPromise };
+export { ZPromise };
