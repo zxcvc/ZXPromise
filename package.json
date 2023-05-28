@@ -1,9 +1,9 @@
 {
-	"name": "z-promise",
+	"name": "zx-promise",
 	"version": "1.0.0",
 	"description": "",
 	"main": "dist/index.js.ts",
-	"types": "./dist/ZPromise.d.ts",
+	"types": "./dist/ZXPromise.d.ts",
 	"scripts": {
 		"build": "rollup -c --bundleConfigAsCjs",
 		"test": "pnpm build && promises-aplus-tests adapter/index.js"

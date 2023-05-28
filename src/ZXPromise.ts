@@ -1,5 +1,5 @@
 export interface DeferredResult<Value> {
-	promise: ZPromise<Value>;
+	promise: ZXPromise<Value>;
 	resolve<T>(value: T): void;
 	reject<T>(value: T): void;
 }
@@ -31,7 +31,7 @@ namespace PromiseUtils {
 		}, 0);
 	}
 	export function is_promise(target: any): boolean {
-		return target instanceof ZPromise;
+		return target instanceof ZXPromise;
 	}
 	export function is_obj(target: any): boolean {
 		return (typeof target === "object" || typeof target === "function") && target !== null;
@@ -67,7 +67,7 @@ namespace PromiseUtils {
 	}
 }
 
-class ZPromise<T> {
+class ZXPromise<T> {
 	state: PromiseUtils.PromiseState = PromiseUtils.PromiseState.PENDING;
 	value: T | undefined = undefined;
 	reason: any = undefined;
@@ -79,7 +79,7 @@ class ZPromise<T> {
 
 	constructor(callback: PromiseUtils.Callback<T>) {
 		const resolve = (value?: T) => {
-			ZPromise.resolve_promise(this as any, value);
+			ZXPromise.resolve_promise(this as any, value);
 		};
 		const reject = (reason?: T) => {
 			this.toRejected(reason);
@@ -157,10 +157,10 @@ class ZPromise<T> {
 	then(
 		onFulfilled?: PromiseUtils.ThenOnFulfilled<T>,
 		onRejected?: PromiseUtils.ThenOnRejected<any>
-	): ZPromise<unknown> {
+	): ZXPromise<unknown> {
 		let res: any;
 		let rej: any;
-		const promise: ZPromise<unknown> = new ZPromise((_res, _rej) => {
+		const promise: ZXPromise<unknown> = new ZXPromise((_res, _rej) => {
 			res = _res;
 			rej = _rej;
 		});
@@ -189,7 +189,7 @@ class ZPromise<T> {
 						rej(result.value);
 						throw result.value;
 					}
-					ZPromise.resolve_promise(promise, result.value);
+					ZXPromise.resolve_promise(promise, result.value);
 				})
 			);
 		}
@@ -202,7 +202,7 @@ class ZPromise<T> {
 						rej(result.value);
 						throw result.value;
 					}
-					ZPromise.resolve_promise(promise, result.value);
+					ZXPromise.resolve_promise(promise, result.value);
 				})
 			);
 		}
@@ -211,7 +211,7 @@ class ZPromise<T> {
 		return promise;
 	}
 
-	static resolve_promise(promise: ZPromise<unknown>, x: any) {
+	static resolve_promise(promise: ZXPromise<unknown>, x: any) {
 		if (promise.visited.has(x)) {
 			promise.toRejected(new TypeError("A recursive loop occurs"));
 			return;
@@ -225,7 +225,7 @@ class ZPromise<T> {
 				const resolve_promise = (value: any) => {
 					if (resolve_promise.called || reject_promise.called) return;
 					resolve_promise.called = true;
-					ZPromise.resolve_promise(promise, value);
+					ZXPromise.resolve_promise(promise, value);
 				};
 				resolve_promise.called = false;
 				const reject_promise = (reason: any) => {
@@ -255,16 +255,16 @@ class ZPromise<T> {
 		}
 		promise.visited.clear();
 	}
-	static resolve<T>(value?: T): ZPromise<T> {
-		return new ZPromise((res, rej) => res(value));
+	static resolve<T>(value?: T): ZXPromise<T> {
+		return new ZXPromise((res, rej) => res(value));
 	}
-	static reject<T>(reason: T): ZPromise<T> {
-		return new ZPromise((res, rej) => rej(reason));
+	static reject<T>(reason: T): ZXPromise<T> {
+		return new ZXPromise((res, rej) => rej(reason));
 	}
 	static deferred<T>(): DeferredResult<T> {
 		let res: PromiseUtils.ResolveCallback<any>;
 		let rej: PromiseUtils.RejectCallback;
-		const promise: ZPromise<T> = new ZPromise((_res, _rej) => {
+		const promise: ZXPromise<T> = new ZXPromise((_res, _rej) => {
 			res = _res;
 			rej = _rej;
 		});
@@ -280,4 +280,4 @@ class ZPromise<T> {
 	}
 }
 
-export { ZPromise };
+export { ZXPromise };
